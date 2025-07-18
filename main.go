@@ -3,13 +3,15 @@ import (
 	"fmt"
 	"bufio"
 	"os"
-	
+	"github.com/paul39-33/pokedex/internal/pokecache"
+	"time"
 )
 
 func main(){
 
 	commands := map[string]cliCommand{}
 	cfg := new(config)
+	cache := pokecache.NewCache(5 * time.Minute)
 	
 		commands["exit"] = cliCommand{
 			name:		"exit",
@@ -19,7 +21,7 @@ func main(){
 		commands["help"] = cliCommand{
 			name:		"help",
 			description:"Displays a help message",
-			callback:	func(cfg *config) error {return commandHelp(cfg, commands)},
+			callback:	func(cfg *config, c *pokecache.Cache) error {return commandHelp(cfg, c, commands)},
 		}
 		commands["map"] = cliCommand{
 			name:		"map",
@@ -44,7 +46,7 @@ func main(){
 			userInput := cleanText[0]
 			if command, exists := commands[userInput]; exists {
 				//use command callback to run the command based on user input
-				err := command.callback(cfg)
+				err := command.callback(cfg, cache)
 
 				if err != nil {
 					fmt.Println("Error: ", err)

@@ -5,12 +5,13 @@ import (
 	"strings"
 	"os"
 	"github.com/paul39-33/pokedex/internal/pokeapi"
+	"github.com/paul39-33/pokedex/internal/pokecache"
 )
 
 type cliCommand struct {
 	name		string
 	description	string
-	callback	func(*config) error
+	callback	func(*config, *pokecache.Cache) error
 }
 
 type config struct {
@@ -25,15 +26,15 @@ func cleanInput(text string) []string {
 	return fields
 }
 
-func commandExit(cfg *config) error {
+func commandExit(cfg *config, c *pokecache.Cache) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *config, commands map[string]cliCommand) error {
+func commandHelp(cfg *config, c *pokecache.Cache, commands map[string]cliCommand) error {
 	fmt.Println("Welcome to the Pokedex!")
-	fmt.Println("Usage:\n")
+	fmt.Printf("Usage:\n\n")
 
 	//loop through all commands
 	for _, innerMap := range commands {
@@ -42,7 +43,7 @@ func commandHelp(cfg *config, commands map[string]cliCommand) error {
 	return nil
 }
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, c *pokecache.Cache) error {
 	var mapRes pokeapi.LocationResponse
 	var url string
 
@@ -52,7 +53,7 @@ func commandMap(cfg *config) error {
 	} else {
 		url = *cfg.Next
 	}
-	mapRes, err := pokeapi.FetchLocationAreas(url)
+	mapRes, err := pokeapi.FetchLocationAreas(url, c)
 	if err != nil {
 		return fmt.Errorf("Error : %v", err)
 	}
@@ -68,14 +69,14 @@ func commandMap(cfg *config) error {
 	return nil
 }
 
-func commandMapb(cfg *config) error {
+func commandMapb(cfg *config, c *pokecache.Cache) error {
 	if cfg.Previous == nil {
 		fmt.Println("you're on the first page")
 	} else {
 		url := *cfg.Previous
 
 		//Similar to commandMap
-		mapRes, err := pokeapi.FetchLocationAreas(url)
+		mapRes, err := pokeapi.FetchLocationAreas(url, c)
 		if err != nil {
 			return fmt.Errorf("Error: %v", err)
 		}
