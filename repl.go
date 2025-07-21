@@ -11,7 +11,7 @@ import (
 type cliCommand struct {
 	name		string
 	description	string
-	callback	func(*config, *pokecache.Cache) error
+	callback	func(*config, *pokecache.Cache, []string) error
 }
 
 type config struct {
@@ -26,13 +26,13 @@ func cleanInput(text string) []string {
 	return fields
 }
 
-func commandExit(cfg *config, c *pokecache.Cache) error {
+func commandExit(cfg *config, c *pokecache.Cache, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *config, c *pokecache.Cache, commands map[string]cliCommand) error {
+func commandHelp(cfg *config, c *pokecache.Cache, args []string, commands map[string]cliCommand) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Printf("Usage:\n\n")
 
@@ -43,7 +43,7 @@ func commandHelp(cfg *config, c *pokecache.Cache, commands map[string]cliCommand
 	return nil
 }
 
-func commandMap(cfg *config, c *pokecache.Cache) error {
+func commandMap(cfg *config, c *pokecache.Cache, args []string) error {
 	var mapRes pokeapi.LocationResponse
 	var url string
 
@@ -69,7 +69,7 @@ func commandMap(cfg *config, c *pokecache.Cache) error {
 	return nil
 }
 
-func commandMapb(cfg *config, c *pokecache.Cache) error {
+func commandMapb(cfg *config, c *pokecache.Cache, args []string) error {
 	if cfg.Previous == nil {
 		fmt.Println("you're on the first page")
 	} else {
@@ -88,5 +88,21 @@ func commandMapb(cfg *config, c *pokecache.Cache) error {
 		}
 		
 	}
+	return nil
+}
+
+func commandExplore(cfg *config, c *pokecache.Cache, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("Explore command requires an area name, args: %v", args)
+	}
+	fmt.Printf("Exploring %v...\n", args[0])
+	
+	areaName := args[0]
+	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s/", areaName)
+	areaPokemon, err := pokeapi.FetchAreaPokemon(url, c)
+	if err != nil {
+		return fmt.Errorf("Error running FetchAreaPokemon(%s): %v", url, err)
+	}
+	pokeapi.GetPokemonList(areaPokemon)
 	return nil
 }
