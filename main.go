@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"github.com/paul39-33/pokedex/internal/pokecache"
+	"github.com/paul39-33/pokedex/internal/pokeapi"
 	"time"
 )
 
@@ -13,6 +14,9 @@ func main(){
 	cfg := new(config)
 	cache := pokecache.NewCache(5 * time.Minute)
 	args := []string{}
+	userPokedex := pokeapi.Pokedex{
+		PokedexList: make(map[string]pokeapi.PokemonInfo),
+	}
 	
 		commands["exit"] = cliCommand{
 			name:		"exit",
@@ -22,7 +26,7 @@ func main(){
 		commands["help"] = cliCommand{
 			name:		"help",
 			description:"Displays a help message",
-			callback:	func(cfg *config, c *pokecache.Cache, args []string) error {return commandHelp(cfg, c, args,commands)},
+			callback:	func(cfg *config, c *pokecache.Cache, args []string, p *pokeapi.Pokedex) error {return commandHelp(cfg, c, args,commands, p)},
 		}
 		commands["map"] = cliCommand{
 			name:		"map",
@@ -38,6 +42,21 @@ func main(){
 			name:		"explore",
 			description:"Explore map area",
 			callback:	commandExplore,
+		}
+		commands["catch"] = cliCommand{
+			name:		"catch",
+			description:"Attempt to catch a pokemon",
+			callback:	commandCatch,
+		}
+		commands["inspect"] = cliCommand{
+			name:		"inspect",
+			description:"Inspect a caught pokemon",
+			callback:	commandInspect,
+		}
+		commands["pokedex"] = cliCommand{
+			name:		"pokedex",
+			description:"See list of caught pokemon",
+			callback:	commandPokedex,
 		}
 	
 	//setup the new scanner input method
@@ -56,7 +75,7 @@ func main(){
 			
 			if command, exists := commands[userInput]; exists {
 				//use command callback to run the command based on user input
-				err := command.callback(cfg, cache, args)
+				err := command.callback(cfg, cache, args, &userPokedex)
 
 				if err != nil {
 					fmt.Println("Callback error: ", err)
